@@ -1,0 +1,52 @@
+'Program: Run macros before & after wb query refresh
+'Module: 3. Class Module (Event Handler Module)
+'Source/s: https://www.mrexcel.com/board/threads/run-vba-after-all-tables-have-refreshed.1204626/page-4#post-5892697
+'Module Name: c_QueryTable
+'Module Stored: in 'Class Modules' folder > new class module file
+'Module Description: This class module acts as the event handler for each query table's AfterRefresh event. It monitors when a query is refreshed and updates the dictionary accordingly.
+'Purpose: Links individual query tables to their events.
+    'Executes code when a query table refreshes successfully (e.g., updating the dictionary).
+    'Tracks when all query tables have been refreshed and triggers post-refresh actions.
+'Key Role: Acts as the workflow manager, ensuring that the code responds dynamically to refresh events.
+'Key Functions:
+    'RunBeforeRefresh: Executes pre-refresh actions for individual queries.
+    'm_queryTable_AfterRefresh: Updates the refresh status of each query table and checks if all tables are refreshed before running AfterRefresh event handler.
+
+Option Explicit
+
+Private WithEvents m_queryTable As QueryTable
+Public Property Set QueryTable(ByVal qt As QueryTable)
+    Set m_queryTable = qt
+End Property
+' Execute actions before refreshing queries
+Private Sub m_queryTable_BeforeRefresh(Cancel As Boolean)
+    ' Run before-refresh logic only if all queries are "not refreshed"
+    If allQueriesNotRefreshed Then
+        Debug.Print "Running myMacroBeforeRefresh..."
+        myMacroBeforeRefresh ' Call your custom macro before refreshing queries
+    End If
+End Sub
+Private Sub m_queryTable_AfterRefresh(ByVal Success As Boolean)
+
+    If Success Then
+    
+        Debug.Print "AfterRefresh: " & m_queryTable.ListObject.Name
+        
+        Dim tableName As String
+        tableName = m_queryTable.ListObject.Name
+        
+        'Marks a Query Table as being Refreshed, aka 1
+        dicQueryTables(tableName)("refreshed") = 1
+        
+        If dicQueryTables.Count = getRefreshCount() Then
+            'All queries have refreshed, therefore call your macro and reset all table flags
+            
+            myMacroAfterRefresh 'calls your macro, change the name accordingly
+            
+            resetTableTracking
+        End If
+        
+    End If
+    
+End Sub
+
