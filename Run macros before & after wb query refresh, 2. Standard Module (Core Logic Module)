@@ -72,8 +72,8 @@
         ' Your code to run before refresh
         Dim filePath As String  ' Path to the Woollam Staff file
         Dim Password As String  ' Password for the file
-        filePath = "K:\5 _Office\Lists\Woollam Staff.xlsx"
-        Password = "9614"
+        filePath = "Filepath here"
+        Password = "xxxx"
         
         ' Open the password-protected file
         Set wb = Workbooks.Open(filePath, Password:=Password)
