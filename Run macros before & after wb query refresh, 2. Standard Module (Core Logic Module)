@@ -2,7 +2,7 @@
 'Module: 2. Standard Module (Core Logic Module)
 'Source/s: https://www.mrexcel.com/board/threads/run-vba-after-all-tables-have-refreshed.1204626/page-4#post-5892697
 'Module Name: m_DicQueryTable
-'Module Stored: in 'Microsoft Excel Objects' folder > 'ThisWorkbook' file
+'Module Stored: in 'Modules' folder > new module file
 'Module Description: This is where most of the logic for the workflow resides. It includes the init subroutine, pre-refresh and post-refresh macros, dictionary management, and logic for resetting and counting refreshed tables.
 'Purpose: Initializes and tracks all query tables in the workbook.
     'Runs custom macros before and after all queries are refreshed.
