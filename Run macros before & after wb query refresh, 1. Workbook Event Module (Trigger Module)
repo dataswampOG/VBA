@@ -1,0 +1,14 @@
+'Program: Run macros before & after wb query refresh
+'Module: 1. Workbook Event Module (Trigger Module)
+'Source/s: https://www.mrexcel.com/board/threads/run-vba-after-all-tables-have-refreshed.1204626/page-4#post-5892697
+'Module Name: N/A
+'Module Stored: in 'Microsoft Excel Objects' folder > 'ThisWorkbook' file
+'Module Description: This module contains the code that automatically runs when the workbook is opened or when a certain event (like a query refresh) is triggered. 
+'Purpose: Its main responsibility is to call the init subroutine when the workbook is opened. This sets up the environment and initializes the dictionary of query tables for tracking refresh states.
+'Key Role: Acts as the trigger point for the entire workflow.
+
+Option Explicit
+
+Private Sub Workbook_Open()
+    init ' calls init subroutine from module m_DicQueryTables
+End Sub
