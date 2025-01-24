@@ -1,0 +1,137 @@
+'Program: Run macros before & after wb query refresh
+'Module: 2. Standard Module (Core Logic Module)
+'Source/s: https://www.mrexcel.com/board/threads/run-vba-after-all-tables-have-refreshed.1204626/page-4#post-5892697
+'Module Name: m_DicQueryTable
+'Module Stored: in 'Microsoft Excel Objects' folder > 'ThisWorkbook' file
+'Module Description: This is where most of the logic for the workflow resides. It includes the init subroutine, pre-refresh and post-refresh macros, dictionary management, and logic for resetting and counting refreshed tables.
+'Purpose: Initializes and tracks all query tables in the workbook.
+    'Runs custom macros before and after all queries are refreshed.
+    'Manages the dictionary (dicQueryTables) to track the refresh states of the query tables.
+'Key Role: Serves as the engine of the workflow, handling the process and logic for tracking, executing, and managing pre-refresh and post-refresh actions.
+'Key Subroutines:
+    'init: Initializes query tracking.
+    'myMacroBeforeRefresh: Runs code before any queries are refreshed.
+    'myMacroAfterRefresh: Runs after all queries are refreshed.
+    'resetTableTracking: Resets the query refresh tracking.
+
+    Option Explicit
+    Public dicQueryTables As Object
+    Public wb As Workbook ' Declare workbook globally to keep track of the workbook
+    'The Dictionary which holds all the query tables amongst all the worksheets and tables in the workbook.
+    Public Sub init(Optional ByVal dummy As Long)
+    
+        Debug.Print "init . . ."
+        
+        Set dicQueryTables = CreateObject("Scripting.Dictionary")
+        
+        Dim ws As Worksheet
+        Dim oListObject As ListObject
+        Dim oQueryTable As QueryTable
+        Dim cQueryTable As c_QueryTable
+        Dim dicTableTracker As Object
+        
+        ' Run the pre-refresh macro
+        myMacroBeforeRefresh ' Global script for all queries
+        
+         ' Initialize the dictionary with all query tables
+        For Each ws In ThisWorkbook.Worksheets
+            For Each oListObject In ws.ListObjects
+                On Error Resume Next
+                Set oQueryTable = oListObject.QueryTable
+                On Error GoTo 0
+                If Not oQueryTable Is Nothing Then
+                    Set cQueryTable = New c_QueryTable
+                    Set cQueryTable.QueryTable = oQueryTable
+                    Set dicTableTracker = CreateObject("Scripting.Dictionary")
+                    dicTableTracker.Add key:="query_table", Item:=cQueryTable
+                    dicTableTracker.Add key:="refreshed", Item:=0
+                    dicQueryTables.Add key:=oListObject.Name, Item:=dicTableTracker
+                    Set oQueryTable = Nothing
+                    Set dicTableTracker = Nothing
+                End If
+            Next oListObject
+        Next ws
+        
+    End Sub
+    ' Function to check if all queries are not refreshed
+    Public Function allQueriesNotRefreshed(Optional ByVal dummy As Long) As Boolean
+        Dim key As Variant
+        For Each key In dicQueryTables.keys()
+            If dicQueryTables(key)("refreshed") <> 0 Then
+                allQueriesNotRefreshed = False
+                Exit Function
+            End If
+        Next key
+        allQueriesNotRefreshed = True
+    End Function
+    ' The macro you want to run before the refresh
+    Public Sub myMacroBeforeRefresh(Optional ByVal dummy As Long)
+        
+        Debug.Print "Running myMacroBeforeRefresh..."
+        
+        ' Your code to run before refresh
+        Dim filePath As String  ' Path to the Woollam Staff file
+        Dim Password As String  ' Password for the file
+        filePath = "K:\5 _Office\Lists\Woollam Staff.xlsx"
+        Password = "9614"
+        
+        ' Open the password-protected file
+        Set wb = Workbooks.Open(filePath, Password:=Password)
+    
+    End Sub
+    'The macro you want to run after the refreshed queries
+    Public Sub myMacroAfterRefresh(Optional ByVal dummy As Long)
+    
+        Debug.Print "myMacroAfterRefresh . . ."
+        
+        ' Check if all queries have been refreshed
+        If dicQueryTables.Count > getRefreshCount() Then
+            Debug.Print "Exit myMacroAfterRefresh . . ."
+            Exit Sub
+        End If
+        
+        Debug.Print "All queries have refreshed. Running your code now..." 
+    
+        'Your code goes here (after the refresh):
+        ' Notify the user
+        MsgBox "Queries refreshed successfully in the current workbook.", vbInformation
+    
+        ' Save and close the external workbook
+        wb.Close SaveChanges:=True
+        
+        ' Reset table tracking after the refresh
+        resetTableTracking
+        
+    End Sub
+    ' Function to count how many queries have been refreshed
+    Public Function getRefreshCount() As Long
+    
+        Debug.Print "getRefreshCount . . ."
+    
+        Dim refreshCount As Long
+        refreshCount = 0
+        
+        Dim key As Variant
+        For Each key In dicQueryTables.keys()
+            If dicQueryTables(key)("refreshed") = 1 Then
+                refreshCount = refreshCount + 1
+            End If
+        Next key
+        
+        getRefreshCount = refreshCount
+        
+    End Function
+    ' Reset the tracking of query refresh statuses
+    Public Sub resetTableTracking()
+    
+        Debug.Print "resetTableTracking . . ."
+    
+        Dim key As Variant
+        
+        For Each key In dicQueryTables.keys()
+            dicQueryTables(key)("refreshed") = 0
+        Next key
+        
+    End Sub
+    
+    
